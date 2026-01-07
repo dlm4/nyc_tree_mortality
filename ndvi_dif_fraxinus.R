@@ -193,7 +193,9 @@ df_join_dif %>% filter(Genus != "Unknown") %>%
   labs(x = "% Predicted lost tree stems", y = "Number of predicted lost tree stems", title = "Predicted tree stems with NDVI 2024-2018 <= -0.2 (ie 'Lost Stems')") +
   theme_bw()
 
-  
+
+table(cls$Species_Ref[cls$Genus_Ref == "Ulmus"])
+
 
 ######
 # Counts
