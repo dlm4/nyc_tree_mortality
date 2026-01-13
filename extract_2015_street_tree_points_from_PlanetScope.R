@@ -19,12 +19,13 @@ test_rast <- rast("/Volumes/NYC_geo/Planet/tests/nyc_daily_stack_4b_highsunonly_
 # use this for reprojecting
 #plotRGB(test_rast, r = 4, g = 3, b = 2, stretch = "lin")
 
-tree_point_path_full <- '/Users/dlm356/dlm356_files/nyc_trees/Forestry Tree Points_20260106/geo_export_aef4cd2e-cc1b-40b1-a609-5ed456741201.shp'
+#tree_point_path_full <- '/Users/dlm356/dlm356_files/nyc_trees/Forestry Tree Points_20260106/geo_export_aef4cd2e-cc1b-40b1-a609-5ed456741201.shp'
+tree_point_path_full <- '/Volumes/NYC_geo/tree_mortality/2015_Street_Tree_Census.gpkg'
 nyc_ftp_points <- st_read(tree_point_path_full)
-nyc_ftp_points$Object_ID <- seq(1,nrow(nyc_ftp_points)) # so there is a unique identifier for each tree # this is OK but in future use # fid_column_name = "OBJECTID"
+#nyc_ftp_points$Object_ID <- seq(1,nrow(nyc_ftp_points)) # so there is a unique identifier for each tree # this is OK but in future use # fid_column_name = "OBJECTID"
 nyc_ftp_points_reproj <- st_transform(nyc_ftp_points, crs(test_rast)) # this takes about a minute fyi
 
-top_output_dir <- "/Volumes/NYC_geo/Planet/tests/nyc_daily_stack_4b_highsunonly_cal_extract_forestry_tree_points" # no trailing "/" 
+top_output_dir <- "/Volumes/NYC_geo/Planet/tests/nyc_daily_stack_4b_highsunonly_cal_extract_2015_street_trees" # no trailing "/" 
 
 # HERE WE GO
 setwd("/Volumes/NYC_geo/Planet/tests/nyc_daily_stack_4b_highsunonly_cal") # source directory
@@ -45,10 +46,10 @@ sel_tif_images_dates <- tif_file_list_dates[sel_tif_inds]
 extractTreesPointByObjectIDRange <- function(i, sel_tif_images, tree_point_sf, set_num){
   sel_tif_rast <- rast(sel_tif_images[i]) # sel_tif_images[i] # could also check if image is within borough
   extracted_trees <- terra::extract(sel_tif_rast, tree_point_sf) # need to use terra::extract for points
-  colnames(extracted_trees)[1] <- "objectid" # the original IDs for terra::extract() are just the row numbers
-  extracted_trees$objectid <- tree_point_sf$objectid # so these need to get appended. This works fine when it's doing everything at once, but not with unique IDs
+  colnames(extracted_trees)[1] <- "tree_id" # the original IDs for terra::extract() are just the row numbers
+  extracted_trees$tree_id <- tree_point_sf$tree_id # so these need to get appended. This works fine when it's doing everything at once, but not with unique IDs
   extracted_trees2 <- extracted_trees[which(complete.cases(extracted_trees)),]
-  write.csv(extracted_trees2, paste0(top_output_dir, "/tree_outputs_point/nyc_trees_forestry_tree_points_20260106_objset", as.character(set_num), "_", as.character(sel_tif_images_datestrings[i]), "_nyccal20220710ref_point.csv"), row.names = FALSE)
+  write.csv(extracted_trees2, paste0(top_output_dir, "/tree_outputs_point/nyc_trees_2015_street_trees_objset", as.character(set_num), "_", as.character(sel_tif_images_datestrings[i]), "_nyccal20220710ref_point.csv"), row.names = FALSE)
   # clear files
   rm(sel_tif_rast)
   rm(extracted_trees)
@@ -66,8 +67,8 @@ plan(multisession, workers = 8) # can increase this again, seems ok for mean cal
 start_time <- Sys.time()
 # i is the set number, nyc_ftp_polys_reproj_sub is the subset of the larger polygon file set
 # Set up ranges for rows (of trees!) to loop over
-rowstart <- c(1, 200001, 400001, 600001, 800001)
-rowend <- c(200000, 400000, 600000, 800000, nrow(nyc_ftp_points_reproj))
+rowstart <- c(1, 200001, 400001)
+rowend <- c(200000, 400000, nrow(nyc_ftp_points_reproj))
 #i <- 1 # for loop
 for (i in 1:length(rowstart)){
   #for (i in 1:3){
